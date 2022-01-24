@@ -68,22 +68,22 @@ wire [1:0]  w_Store_sel;
 Control_Unit (
     //.clk       (CLOCK_50)  ,
     //.rst_n ()    ,
-	 .type      (w_type)     ,
+    .type      (w_type)     ,
     .opcode    (w_opcode)   ,  
     .funct7    (w_funct7)   ,
     .funct3    (w_funct3)   ,
     .Branch    (w_Branch)   , // notify B-type instruction
-	 .Jump      (w_Jump)     , // notify J-type instruction and Jump
-	 .PCspecial (w_PCspecial), // only 1 when jalr (nextPC depends on rs1); otherwise NextPC depends on currentPC)
+    .Jump      (w_Jump)     , // notify J-type instruction and Jump
+    .PCspecial (w_PCspecial), // only 1 when jalr (nextPC depends on rs1); otherwise NextPC depends on currentPC)
     .MemtoReg  (w_MemtoReg) , // connect to mux after DataMem
     .ALUSrc    (w_ALUSrc)   , // connect to mux select input ALU2
-	 .Asel      (w_Asel)     , // select input of 1st operand of ALU
+    .Asel      (w_Asel)     , // select input of 1st operand of ALU
     .MemRd     (w_MemRd)    , // connect to DataMem  
-	 .MemWr     (w_MemWr)    , // connect to DataMem
+    .MemWr     (w_MemWr)    , // connect to DataMem
     .RegWr     (w_RegWr)    , // connect to registers file
-	 .BrOp      (w_BrOp)     ,
-	 .Load_sel  (w_Load_sel) ,
-	 .Store_sel (w_Store_sel),
+    .BrOp      (w_BrOp)     ,
+    .Load_sel  (w_Load_sel) ,
+    .Store_sel (w_Store_sel),
     .ALUOp     (w_ALUOp)      // connect to ALU
 );
 
@@ -102,8 +102,8 @@ module_32_D_FF PC (
     .i_clr      (0)         ,
     //.i_CE       (1)         , 
     .i_D        (w_Next_ins),
-	 .i_clk      (CLOCK_50)  ,
-	 .o_Q        (w_addr_ins)
+    .i_clk      (CLOCK_50)  ,
+    .o_Q        (w_addr_ins)
 );
 
 Instruction_Memory IM (
@@ -114,10 +114,10 @@ Instruction_Memory IM (
 
 /*Reg_IF_ID (
     .clk   (CLOCK_50),
-	 .rst   (reset),
+    .rst   (reset),
     .if_pc (w_addr_ins) ,
     .if_inst (w_ins),
-	 .id_pc (w_addr_ins_reg) ,
+    .id_pc (w_addr_ins_reg) ,
     .id_inst (w_ins_reg)
 );*/
 
@@ -148,19 +148,19 @@ assign r1 = w_readdata2;
 assign w_addr_ins1 = (w_PCspecial) ? w_readdata1 : w_addr_ins; 
 CLA Adder1 (
     .i_A        (w_addr_ins1) ,
-	 .i_B        (w_imm)       ,
-	 .i_mode     (0)           ,   //0: add; 1: sub
-	 .S          (w_Branch_ins),
-	 .overflow   (w_adder1OF)  ,
-	 .zero       (w_adder1zero)
+    .i_B        (w_imm)       ,
+    .i_mode     (0)           ,   //0: add; 1: sub
+    .S          (w_Branch_ins),
+    .overflow   (w_adder1OF)  ,
+    .zero       (w_adder1zero)
 );
 CLA Adder2 (
     .i_A        (w_addr_ins)  ,
-	 .i_B        (3'b100)      ,
-	 .i_mode     (0)           ,   //0: add; 1: sub
-	 .S          (w_Normal_ins),
-	 .overflow   (w_adder2OF)  ,
-	 .zero       (w_adder2zero)
+    .i_B        (3'b100)      ,
+    .i_mode     (0)           ,   //0: add; 1: sub
+    .S          (w_Normal_ins),
+    .overflow   (w_adder2OF)  ,
+    .zero       (w_adder2zero)
 );
 assign w_Next_ins_temp = (w_BrOp[1]) ? (w_BrOp[0] ? (~w_lt) & w_Branch : w_lt & w_Branch) : (w_BrOp[0] ? ~(w_zero) & w_Branch : w_zero & w_Branch);// mux PC selection
 assign w_Next_ins_temp1 = w_Next_ins_temp | w_Jump;
@@ -180,8 +180,8 @@ assign w_MemDataWr = (w_Store_sel[1]) ? w_readdata2 : (w_Store_sel[0]) ? {{16{w_
 //assign r1 = w_WriteData;
 
 Imm_Gen ImmGen (
-    .inst 		  (w_ins)  , 
-    .type     	  (w_type) ,	
+    .inst 	 (w_ins)  , 
+    .type     	 (w_type) ,	
     .imm         (w_imm)  ,
 );
 assign w_inALU2 = (w_ALUSrc[1] == 0) ? (w_ALUSrc[0] ? w_imm : w_readdata2) : 3'b100; // mux before ALU2; 00:rs2, 01:imm, 10: 4
