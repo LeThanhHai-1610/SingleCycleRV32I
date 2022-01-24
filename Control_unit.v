@@ -3,23 +3,23 @@ module Control_Unit(
     //input            rst_n    ,
     //input            BrEq     ,
     //input            BrLT     ,
-	 input            zero_control,
-	 input      [2:0] type      ,
+    input            zero_control,
+    input      [2:0] type      ,
     input      [6:0] opcode    ,  
     input      [6:0] funct7    ,
     input      [2:0] funct3    ,
     output reg       Branch    ,   // notify B-type instruction
-	 output reg       Jump      ,   // notify J-type instruction and Jump
-	 output reg       PCspecial ,   // only 1 when jalr (nextPC depends on rs1); otherwise NextPC depends on currentPC)
+    output reg       Jump      ,   // notify J-type instruction and Jump
+    output reg       PCspecial ,   // only 1 when jalr (nextPC depends on rs1); otherwise NextPC depends on currentPC)
     output reg       MemtoReg  ,   // connect to Mux after DataMem
     output reg [1:0] ALUSrc    ,   // select input of 2nd operand of ALU
-	 output reg [1:0] Asel      ,   // select input of 1st operand of ALU
+    output reg [1:0] Asel      ,   // select input of 1st operand of ALU
     output reg       MemRd     ,   // connect to DataMem  
-	 output reg       MemWr     ,   // connect to DataMem
+    output reg       MemWr     ,   // connect to DataMem
     output reg       RegWr     ,   // connect to registers file  
-	 output reg [1:0] BrOp      ,   // select between B instructions
-	 output reg [2:0] Load_sel  ,   // select between load instructions; control Mux before WriteData of RegFile
-	 output reg [1:0] Store_sel ,   // select between S instructions; control Mux before WriteData of DataMem
+    output reg [1:0] BrOp      ,   // select between B instructions
+    output reg [2:0] Load_sel  ,   // select between load instructions; control Mux before WriteData of RegFile
+    output reg [1:0] Store_sel ,   // select between S instructions; control Mux before WriteData of DataMem
     output reg [3:0] ALUOp         // connect to ALU
 );
 
@@ -63,246 +63,245 @@ begin
   if (zero_control) 
     begin 
 	     Branch      = 1'b0;      // PC = PC + 4
-		  Jump        = 1'b0;      // no jump
-		  PCspecial   = 1'b0;      // no jalr
-		  MemtoReg    = 1'b0;      // ALU result -> registers files
-		  Asel        = 2'b00;     // 1st ALU operand from rs1
-		  ALUSrc      = 2'b00;     // 2nd ALU operand from rs2
-		  MemRd       = 1'b0;      // don't rd or wr data memory
-		  MemWr       = 1'b0;      // don't rd or wr data memory
-		  RegWr       = 1'b0;      // No Write to rd
-		  ALUOp       = ALUnop;    // ALU sll
-		  BrOp        = 2'bxx;
-		  Load_sel    = 3'b1xx;    // normal
-		  Store_sel   = 2'b1x;     // normal
-	 end
+	     Jump        = 1'b0;      // no jump
+	     PCspecial   = 1'b0;      // no jalr
+	     MemtoReg    = 1'b0;      // ALU result -> registers files
+	     Asel        = 2'b00;     // 1st ALU operand from rs1
+	     ALUSrc      = 2'b00;     // 2nd ALU operand from rs2
+	     MemRd       = 1'b0;      // don't rd or wr data memory
+	     MemWr       = 1'b0;      // don't rd or wr data memory
+	     RegWr       = 1'b0;      // No Write to rd
+	     ALUOp       = ALUnop;    // ALU sll
+	     BrOp        = 2'bxx;
+	     Load_sel    = 3'b1xx;    // normal
+	     Store_sel   = 2'b1x;     // normal
+   end
   else 
     begin
       case(opcode)
       
-		R:
-		  begin
-	         Branch      = 1'b0;      // PC = PC + 4
-		      Jump        = 1'b0;      // no jump
-		      PCspecial   = 1'b0;      // no jalr
+      R:
+        begin
+	    Branch      = 1'b0;      // PC = PC + 4
+	    Jump        = 1'b0;      // no jump
+            PCspecial   = 1'b0;      // no jalr
             MemtoReg    = 1'b0;      // ALU result -> registers files
-		      Asel        = 2'b00;     // 1st ALU operand from rs1
+	    Asel        = 2'b00;     // 1st ALU operand from rs1
             ALUSrc      = 2'b00;     // 2nd ALU operand from rs2
             MemRd       = 1'b0;      // don't rd or wr data memory
-		      MemWr       = 1'b0;      // don't rd or wr data memory
+            MemWr       = 1'b0;      // don't rd or wr data memory
             RegWr       = 1;         // Write to rd
-		      BrOp        = 2'bxx;
-		      Load_sel    = 3'b1xx;    // normal
-		      Store_sel   = 2'b1x;     // normal
-		      case (funct3)
-		          3'b000: /// add or sub
-				        begin
-				            case (funct7)
-					             7'b0000000: ALUOp = ALUadd; // ALU add
-						          7'b0100000: ALUOp = ALUsub; // ALU sub
-		                      default:    ALUOp = ALUadd; // ALU add
-		                  endcase			
-			           end		 
-	    		    3'b001:  ALUOp = ALUsll;    // ALU sll
+	    BrOp        = 2'bxx;
+	    Load_sel    = 3'b1xx;    // normal
+            Store_sel   = 2'b1x;     // normal
+	    case (funct3)
+	        3'b000: /// add or sub
+	          begin
+		      case (funct7)
+		          7'b0000000: ALUOp = ALUadd; // ALU add
+		          7'b0100000: ALUOp = ALUsub; // ALU sub
+		          default:    ALUOp = ALUadd; // ALU add
+		      endcase			
+		  end		 
+	    	3'b001:  ALUOp = ALUsll;    // ALU sll
                 3'b010:	 ALUOp = ALUslt;    // ALU slt
                 3'b011:	 ALUOp = ALUsltu;   // ALU sllu
-	             3'b100:	 ALUOp = ALUxor;    // ALU xor			
-		          3'b101: //srl or sra
-		            begin  
-					       case(funct7)
-				              7'b0000000: ALUOp = ALUsrl; // ALU srl
-			                 7'b0100000: ALUOp = ALUsra; // ALU sra	
-				              default:    ALUOp = ALUsrl; // ALU srl
-			             endcase
-				      end
-		          3'b110:  ALUOp = ALUor;     // ALU or
-		          3'b111:	 ALUOp = ALUand;    // ALU and
-				    default: ALUOp = ALUadd;
+	        3'b100:	 ALUOp = ALUxor;    // ALU xor			
+		3'b101: //srl or sra
+		  begin  
+		      case(funct7)
+		          7'b0000000: ALUOp = ALUsrl; // ALU srl
+			  7'b0100000: ALUOp = ALUsra; // ALU sra	
+			  default:    ALUOp = ALUsrl; // ALU srl
 		      endcase
-	     end
-		  
+		  end
+		3'b110:  ALUOp = ALUor;     // ALU or
+		3'b111:	 ALUOp = ALUand;    // ALU and
+		default: ALUOp = ALUadd;
+	    endcase
+	  end
       I:
-		  begin
-		      Branch      = 1'b0;      // PC = PC + 4
-			   Jump        = 1'b0;      // no jump
-			   PCspecial   = 1'b0;      // no jalr
+        begin
+	    Branch      = 1'b0;      // PC = PC + 4
+	    Jump        = 1'b0;      // no jump
+ 	    PCspecial   = 1'b0;      // no jalr
             MemtoReg    = 1'b0;      // ALU result -> registers files
-			   Asel        = 2'b00;     // 1st ALU operand from rs1
+	    Asel        = 2'b00;     // 1st ALU operand from rs1
             ALUSrc      = 2'b01;     // 2nd ALU operand from imm
             MemRd       = 1'b0;      // don't rd or wr data memory
-			   MemWr       = 1'b0;      // don't rd or wr data memory
+	    MemWr       = 1'b0;      // don't rd or wr data memory
             RegWr       = 1;         // Write to rd
-			   BrOp        = 2'bxx;
-			   Load_sel    = 3'b1xx;    // normal
-			   Store_sel   = 2'b1x;     // normal
-			   case (funct3)
-			       3'b000:  ALUOp = ALUadd;
-				    3'b001:  ALUOp = ALUsll;    // ALU sll
-      		    3'b010:  ALUOp = ALUslt;    // ALU slt
+	    BrOp        = 2'bxx;
+	    Load_sel    = 3'b1xx;    // normal
+	    Store_sel   = 2'b1x;     // normal
+	    case (funct3)
+	        3'b000:  ALUOp = ALUadd;
+	        3'b001:  ALUOp = ALUsll;    // ALU sll
+      	        3'b010:  ALUOp = ALUslt;    // ALU slt
                 3'b011:  ALUOp = ALUsltu;    // ALU sltu
                 3'b100:  ALUOp = ALUxor;     // ALU xor
                 3'b101: //srli or srai
                   begin  
-	                 case(funct7)
-			               7'b0000000: ALUOp = ALUsrl; // ALU srl 
-			               7'b0100000: ALUOp = ALUsra; // ALU sra
-			               default:    ALUOp = ALUsra; // ALU sra
-			           endcase
-			         end
-		          3'b110:   ALUOp = ALUor;     // ALU or
-		          3'b111:	  ALUOp = ALUand;    // ALU and
-			       default:  ALUOp = ALUadd;
-            endcase	 
+	              case(funct7)
+		          7'b0000000: ALUOp = ALUsrl; // ALU srl 
+			  7'b0100000: ALUOp = ALUsra; // ALU sra
+			  default:    ALUOp = ALUsra; // ALU sra
+		      endcase
 		  end
+		3'b110:   ALUOp = ALUor;     // ALU or
+		3'b111:	  ALUOp = ALUand;    // ALU and
+		default:  ALUOp = ALUadd;
+             endcase	 
+	  end
 		  
       ld:
-		    begin
-                Branch      = 1'b0;      // PC = PC + 4
-					 Jump        = 1'b0;      // no jump
-					 PCspecial   = 1'b0;      // no jalr
-					 MemtoReg    = 1'b1;      // data from DataMem -> registers files
-					 Asel        = 2'b00;     // 1st ALU operand from rs1
-					 ALUSrc      = 2'b01;     // 2nd ALU operand from imm
-					 MemRd       = 1'b1;      // Read data memory
-					 MemWr       = 1'b0;      // don't wr to data memory
-					 RegWr       = 1'b1;      // Write to rd
-					 BrOp        = 2'bxx;
-					 Store_sel   = 2'bxx;     // normal
-					 ALUOp       = ALUadd;    // ALU add
-					 case (funct3)
-					     3'b000:  Load_sel    = 3'b000;    // lb
-					     3'b001:  Load_sel    = 3'b001;    // lh
-					     3'b010:  Load_sel    = 3'b1xx;    // lw
-					     3'b100:  Load_sel    = 3'b010;    // lbu
-					     3'b101:  Load_sel    = 3'b011;    // lhu 
-					     default: Load_sel    = 3'b1xx;    // lw
-					 endcase
-			 end
+        begin
+            Branch      = 1'b0;      // PC = PC + 4
+	    Jump        = 1'b0;      // no jump
+	    PCspecial   = 1'b0;      // no jalr
+	    MemtoReg    = 1'b1;      // data from DataMem -> registers files
+	    Asel        = 2'b00;     // 1st ALU operand from rs1
+	    ALUSrc      = 2'b01;     // 2nd ALU operand from imm
+	    MemRd       = 1'b1;      // Read data memory
+	    MemWr       = 1'b0;      // don't wr to data memory
+	    RegWr       = 1'b1;      // Write to rd
+	    BrOp        = 2'bxx;
+	    Store_sel   = 2'bxx;     // normal
+	    ALUOp       = ALUadd;    // ALU add
+	    case (funct3)
+	        3'b000:  Load_sel    = 3'b000;    // lb
+	        3'b001:  Load_sel    = 3'b001;    // lh
+	        3'b010:  Load_sel    = 3'b1xx;    // lw
+	        3'b100:  Load_sel    = 3'b010;    // lbu
+	        3'b101:  Load_sel    = 3'b011;    // lhu 
+	        default: Load_sel    = 3'b1xx;    // lw
+	    endcase
+	end
       st:
-		    begin
-                Branch      = 1'b0;      // PC = PC + 4
-					 Jump        = 1'b0;      // no jump
-					 PCspecial   = 1'b0;      // no jalr
-					 MemtoReg    = 1'bx;      // don't need to wr to registers files
-					 Asel        = 2'b00;     // 1st ALU operand from rs1
-					 ALUSrc      = 2'b01;     // 2nd ALU operand from imm
-					 MemRd       = 1'b0;      // Don't rd data memory
-					 MemWr       = 1'b1;      // wr to data memory
-					 RegWr       = 1'b0;      // Don't write to rd
-					 BrOp        = 2'bxx;
-					 Load_sel    = 3'bxxx;    // don't care
-					 ALUOp       = ALUadd;    // ALU add
-					 case(funct3)
-					     3'b000:  Store_sel   = 2'b00;     // sb
-						  3'b001:  Store_sel   = 2'b01;     // sh
-						  3'b010:  Store_sel   = 2'b1x;     // sw
-						  default: Store_sel   = 2'b1x;     // sw
-                endcase
-		     end
-      B:
-	    begin
-            Branch      = 1;          // PC may not PC + 4, depends on zero flag from ALU
-				Jump        = 1'b0;       // no jump
-				PCspecial   = 1'b0;       // no jalr
-			   MemtoReg    = 1'bx;       // don't need -> don't care
-				Asel        = 2'b00;      // 1st ALU operand from rs1
-				ALUSrc      = 2'b00;      // 2nd ALU operand from rs2
-				MemRd       = 1'b0;       // don't rd or wr data memory
-				MemWr       = 1'b0;       // don't rd or wr data memory
-				RegWr       = 1'b0;       // don't need to write to registers file
-				ALUOp       = ALUslt;     // ALU compare
-				Load_sel    = 3'b1xx;     // normal
-				Store_sel   = 2'b1x;      // normal
-				case(funct3)
-				    3'b000:  BrOp        = 2'b00; // beq
-					 3'b001:  BrOp        = 2'b01; // bne
-					 3'b100:  BrOp        = 2'b10; // blt
-					 3'b101:  BrOp        = 2'b11; // bge
-					 3'b110:  BrOp        = 2'b10; // bltu
-					 3'b111:  BrOp        = 2'b11; // bgeu
-					 default: BrOp        = 2'b00; // beq
+        begin
+            Branch      = 1'b0;      // PC = PC + 4
+	    Jump        = 1'b0;      // no jump
+	    PCspecial   = 1'b0;      // no jalr
+	    MemtoReg    = 1'bx;      // don't need to wr to registers files
+	    Asel        = 2'b00;     // 1st ALU operand from rs1
+	    ALUSrc      = 2'b01;     // 2nd ALU operand from imm
+	    MemRd       = 1'b0;      // Don't rd data memory
+	    MemWr       = 1'b1;      // wr to data memory
+	    RegWr       = 1'b0;      // Don't write to rd
+	    BrOp        = 2'bxx;
+	    Load_sel    = 3'bxxx;    // don't care
+	    ALUOp       = ALUadd;    // ALU add
+	    case(funct3)
+	        3'b000:  Store_sel   = 2'b00;     // sb
+	        3'b001:  Store_sel   = 2'b01;     // sh
+		3'b010:  Store_sel   = 2'b1x;     // sw
+		default: Store_sel   = 2'b1x;     // sw
             endcase
-		  end
+	end
+      B:
+        begin
+            Branch      = 1;          // PC may not PC + 4, depends on zero flag from ALU
+	    Jump        = 1'b0;       // no jump
+	    PCspecial   = 1'b0;       // no jalr
+	    MemtoReg    = 1'bx;       // don't need -> don't care
+	    Asel        = 2'b00;      // 1st ALU operand from rs1
+	    ALUSrc      = 2'b00;      // 2nd ALU operand from rs2
+	    MemRd       = 1'b0;       // don't rd or wr data memory
+	    MemWr       = 1'b0;       // don't rd or wr data memory
+	    RegWr       = 1'b0;       // don't need to write to registers file
+	    ALUOp       = ALUslt;     // ALU compare
+	    Load_sel    = 3'b1xx;     // normal
+	    Store_sel   = 2'b1x;      // normal
+	    case(funct3)
+                3'b000:  BrOp        = 2'b00; // beq
+		3'b001:  BrOp        = 2'b01; // bne
+		3'b100:  BrOp        = 2'b10; // blt
+		3'b101:  BrOp        = 2'b11; // bge
+		3'b110:  BrOp        = 2'b10; // bltu
+		3'b111:  BrOp        = 2'b11; // bgeu
+		default: BrOp        = 2'b00; // beq
+            endcase
+        end
       jalr:
         begin
             Branch      = 1'b0;       // PC = PC + 4
-				Jump        = 1'b1;       // jump
-				PCspecial   = 1'b1;       // jalr
-				MemtoReg    = 1'b0;       // ALU result -> registers files
-				Asel        = 2'b01;      // 1st ALU operand is PC
-				ALUSrc      = 2'b10;      // 2nd ALU operand is 4
-				MemRd       = 1'b0;       // don't rd or wr data memory
-				MemWr       = 1'b0;       // don't rd or wr data memory
-				RegWr       = 1;          // Write to rd
-				BrOp        = 2'bxx;
-				Load_sel    = 3'b1xx;     // normal
-				Store_sel   = 2'b1x;      // normal
-				ALUOp       = ALUadd;     // ALU add
+	   Jump        = 1'b1;       // jump
+	   PCspecial   = 1'b1;       // jalr
+	   MemtoReg    = 1'b0;       // ALU result -> registers files
+	   Asel        = 2'b01;      // 1st ALU operand is PC
+	   ALUSrc      = 2'b10;      // 2nd ALU operand is 4
+	   MemRd       = 1'b0;       // don't rd or wr data memory
+	   MemWr       = 1'b0;       // don't rd or wr data memory
+	   RegWr       = 1;          // Write to rd
+	   BrOp        = 2'bxx;
+	   Load_sel    = 3'b1xx;     // normal
+	   Store_sel   = 2'b1x;      // normal
+	   ALUOp       = ALUadd;     // ALU add
         end
       jal:
         begin
-	         Branch      = 1'b0;       // PC = PC + 4
-				Jump        = 1'b1;       // jump
-				PCspecial   = 1'b0;       // no jalr
-				MemtoReg    = 1'b0;       // ALU result -> registers files
-				Asel        = 2'b01;      // 1st ALU operand is PC
-				ALUSrc      = 2'b10;      // 2nd ALU operand is 4
-				MemRd       = 1'b0;       // don't rd or wr data memory
-				MemWr       = 1'b0;       // don't rd or wr data memory
-				RegWr       = 1;          // Write to rd
-				BrOp        = 2'bxx;
-				Load_sel    = 3'b1xx;     // normal
-				Store_sel   = 2'b1x;      // normal
-				ALUOp       = ALUadd;     // ALU add
+	    Branch      = 1'b0;       // PC = PC + 4
+	    Jump        = 1'b1;       // jump
+	    PCspecial   = 1'b0;       // no jalr
+	    MemtoReg    = 1'b0;       // ALU result -> registers files
+	    Asel        = 2'b01;      // 1st ALU operand is PC
+	    ALUSrc      = 2'b10;      // 2nd ALU operand is 4
+	    MemRd       = 1'b0;       // don't rd or wr data memory
+	    MemWr       = 1'b0;       // don't rd or wr data memory
+	    RegWr       = 1;          // Write to rd
+	    BrOp        = 2'bxx;
+	    Load_sel    = 3'b1xx;     // normal
+	    Store_sel   = 2'b1x;      // normal
+	    ALUOp       = ALUadd;     // ALU add
         end
       auipc:
         begin
-	         Branch      = 1'b0;       // PC = PC + 4
-				Jump        = 1'b0;       // no jump
-				PCspecial   = 1'b0;       // no jalr
-				MemtoReg    = 1'b0;       // ALU result -> registers files
-				Asel        = 2'b01;      // 1st ALU operand from PC
-				ALUSrc      = 2'b01;      // 2nd ALU operand from imm
-				MemRd       = 1'b0;       // don't rd or wr data memory
-				MemWr       = 1'b0;       // don't rd or wr data memory
-				RegWr       = 1;          // Write to rd
-				BrOp        = 2'bxx;
-				Load_sel    = 3'b1xx;     // normal
-				Store_sel   = 2'b1x;      // normal
-				ALUOp       = ALUadd;     // ALU add
+	    Branch      = 1'b0;       // PC = PC + 4
+	    Jump        = 1'b0;       // no jump
+	    PCspecial   = 1'b0;       // no jalr
+	    MemtoReg    = 1'b0;       // ALU result -> registers files
+	    Asel        = 2'b01;      // 1st ALU operand from PC
+	    ALUSrc      = 2'b01;      // 2nd ALU operand from imm
+	    MemRd       = 1'b0;       // don't rd or wr data memory
+	    MemWr       = 1'b0;       // don't rd or wr data memory
+	    RegWr       = 1;          // Write to rd
+	    BrOp        = 2'bxx;
+	    Load_sel    = 3'b1xx;     // normal
+	    Store_sel   = 2'b1x;      // normal
+	    ALUOp       = ALUadd;     // ALU add
         end
-	   lui:
-        begin
-	         Branch      = 1'b0;       // PC = PC + 4
-				Jump        = 1'b0;       // no jump
-				PCspecial   = 1'b0;       // no jalr
-				MemtoReg    = 1'b0;       // ALU result -> registers files
-				Asel        = 2'b10;      // 1st ALU operand is 0
-				ALUSrc      = 2'b01;      // 2nd ALU operand from imm
-				MemRd       = 1'b0;       // don't rd or wr data memory
-				MemWr       = 1'b0;       // don't rd or wr data memory
-				RegWr       = 1;          // Write to rd
-				BrOp        = 2'bxx;
-				Load_sel    = 3'b1xx;     // normal
-				Store_sel   = 2'b1x;      // normal
-				ALUOp       = ALUadd;     // ALU add
+      lui:
+         begin
+	    Branch      = 1'b0;       // PC = PC + 4
+	    Jump        = 1'b0;       // no jump
+	    PCspecial   = 1'b0;       // no jalr
+	    MemtoReg    = 1'b0;       // ALU result -> registers files
+	    Asel        = 2'b10;      // 1st ALU operand is 0
+	    ALUSrc      = 2'b01;      // 2nd ALU operand from imm
+	    MemRd       = 1'b0;       // don't rd or wr data memory
+	    MemWr       = 1'b0;       // don't rd or wr data memory
+	    RegWr       = 1;          // Write to rd
+	    BrOp        = 2'bxx;
+	    Load_sel    = 3'b1xx;     // normal
+	    Store_sel   = 2'b1x;      // normal
+	    ALUOp       = ALUadd;     // ALU add
         end
      default: 
-	     begin
+       begin
             Branch      = 1'b0;       // PC = PC + 4
-				Jump        = 1'b0;       // no jump
-				PCspecial   = 1'b0;       // no jalr
-			   MemtoReg    = 1'b0;       // ALU result -> registers files
-				Asel        = 2'b00;      // 1st ALU operand from rs1
-				ALUSrc      = 2'b00;      // 2nd ALU operand from rs2
-				MemRd       = 1'b0;       // don't rd or wr data memory
-				MemWr       = 1'b0;       // don't rd or wr data memory
-				RegWr       = 1;          // Write to rd
-				ALUOp       = ALUnop;      // ALU or
-				BrOp        = 2'bxx;
-				Load_sel    = 3'b1xx;     // normal
-				Store_sel   = 2'b1x;      // normal
-		  end
+	    Jump        = 1'b0;       // no jump
+	    PCspecial   = 1'b0;       // no jalr
+	    MemtoReg    = 1'b0;       // ALU result -> registers files
+	    Asel        = 2'b00;      // 1st ALU operand from rs1
+	    ALUSrc      = 2'b00;      // 2nd ALU operand from rs2
+	    MemRd       = 1'b0;       // don't rd or wr data memory
+	    MemWr       = 1'b0;       // don't rd or wr data memory
+	    RegWr       = 1;          // Write to rd
+	    ALUOp       = ALUnop;      // ALU or
+	    BrOp        = 2'bxx;
+	    Load_sel    = 3'b1xx;     // normal
+	    Store_sel   = 2'b1x;      // normal
+      end
     endcase
   end
 end
